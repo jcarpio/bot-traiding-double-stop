@@ -98,7 +98,7 @@ def monitor_operation(operation, chat_id):
     stop_loss_percent = operation["stop_loss_percent"]
 
     # Ejecución de la orden de compra
- buy_order = place_market_order(symbol, 'buy', trade_amount)
+    buy_order = place_market_order(symbol, 'buy', trade_amount)
     if not buy_order:
         asyncio.run(send_telegram_message(chat_id, f"Error al ejecutar la orden de compra para {symbol}."))
         return
@@ -124,7 +124,7 @@ def monitor_operation(operation, chat_id):
         return
 
     stop_loss_price = entry_price * (1 - stop_loss_percent / 100)
-    trailing_stop_price = entry_price
+    trailing_stop_price = entry_price * (1 - trailing_stop_percent / 100)
 
     asyncio.run(
         send_telegram_message(
@@ -142,8 +142,8 @@ def monitor_operation(operation, chat_id):
             if not current_price:
                 continue
 
-            # Actualizar Trailing Stop si el precio sube
-            if current_price > trailing_stop_price:
+            # Actualizar Trailing Stop solo si el precio sube
+            if current_price > entry_price and current_price > trailing_stop_price / (1 - trailing_stop_percent / 100):
                 trailing_stop_price = current_price * (1 - trailing_stop_percent / 100)
 
             # Enviar actualizaciones según el intervalo
@@ -156,7 +156,6 @@ def monitor_operation(operation, chat_id):
                         f"Stop Loss: {stop_loss_price} ({stop_loss_percent}%)\n"
                         f"Entrada: {entry_price}",
                     )
-
                 )
 
             # Verificar Stop Loss
@@ -180,7 +179,7 @@ def monitor_operation(operation, chat_id):
             logging.error(f"Error en el monitoreo de {symbol}: {e}")
             asyncio.run(send_telegram_message(chat_id, f"Error en el monitoreo de {symbol}: {e}"))
             break
-
+            
 # Comandos de Telegram
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Muestra un mensaje de bienvenida."""
