@@ -1,0 +1,63 @@
+onfigurar systemd para Ejecutar el Programa como un Servicio
+
+1. Crear el Archivo del Servicio
+   1. Crea un archivo de servicio para tu programa:
+      sudo nano /etc/systemd/system/trading-bot.service
+
+   2. Escribe la configuración del servicio en el archivo:
+      [Unit]
+      Description=Trading Bot Service
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=tu_usuario
+      WorkingDirectory=/ruta/a/tu/trading-bot
+      ExecStart=/usr/bin/python3 /ruta/a/tu/trading-bot/bot.py
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+      - User: Reemplaza 'tu_usuario' con el usuario que ejecutará el bot.
+      - WorkingDirectory: Ruta al directorio donde está tu programa.
+      - ExecStart: Comando para ejecutar tu programa (ajusta la ruta de Python y el archivo .py).
+
+2. Configurar y Activar el Servicio
+   1. Recarga los servicios para que systemd detecte tu nuevo archivo:
+      sudo systemctl daemon-reload
+
+   2. Habilita el servicio para que se inicie automáticamente al reiniciar:
+      sudo systemctl enable trading-bot
+
+   3. Inicia el servicio manualmente ahora:
+      sudo systemctl start trading-bot
+
+3. Verificar que el Servicio Funciona
+   1. Comprueba el estado del servicio:
+      sudo systemctl status trading-bot
+
+      Verás algo como:
+      ● trading-bot.service - Trading Bot Service
+           Loaded: loaded (/etc/systemd/system/trading-bot.service; enabled; vendor preset: enabled)
+           Active: active (running) since Tue 2024-12-12 12:00:00 UTC; 10s ago
+
+   2. Si algo falla, revisa los logs del servicio:
+      sudo journalctl -u trading-bot -f
+
+4. Parar o Reiniciar el Servicio
+   - Para detener el servicio:
+     sudo systemctl stop trading-bot
+
+   - Para reiniciar el servicio:
+     sudo systemctl restart trading-bot
+
+Notas Adicionales:
+- Si tu programa tiene dependencias externas, asegúrate de que estén instaladas para el usuario que ejecutará el servicio:
+  pip install -r requirements.txt
+
+- Si tienes un entorno virtual para Python, ajusta ExecStart para activar el entorno antes de ejecutar el bot:
+  ExecStart=/bin/bash -c "source /ruta/a/venv/bin/activate && python /ruta/a/tu-trading-bot/bot.py"
+
+Con estos pasos, tendrás el programa funcionando de forma permanente en tu servidor Ubuntu gestionado por systemd. Si necesitas más ayuda o tienes dudas, ¡aquí estoy!
